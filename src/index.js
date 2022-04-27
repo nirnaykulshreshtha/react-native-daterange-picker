@@ -47,6 +47,9 @@ const DateRangePicker = ({
   buttonTextStyle,
   presetButtons,
   open,
+  mode,
+  relativeContainerStyle,
+  isSubmitButton
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [weeks, setWeeks] = useState([]);
@@ -82,6 +85,10 @@ const DateRangePicker = ({
       ...styles.monthButtons,
       ...monthButtonsStyle,
     },
+    relativeContainer: {
+      ...styles.relativeContainer,
+      ...relativeContainerStyle
+    }
   };
 
   const _onOpen = () => {
@@ -323,81 +330,112 @@ const DateRangePicker = ({
     </View>
   );
 
-  return isOpen ? (
-    <>
-      <View style={mergedStyles.backdrop}>
-        <TouchableWithoutFeedback
-          style={styles.closeTrigger}
-          onPress={_onClose}
-        >
-          <View style={styles.closeContainer} />
-        </TouchableWithoutFeedback>
-        <View>
-          <View style={mergedStyles.container}>
-            <View style={styles.header}>
-              <TouchableOpacity onPress={previousMonth}>
-                {monthPrevButton || (
-                  <Image
-                    resizeMode="contain"
-                    style={mergedStyles.monthButtons}
-                    source={chevronL}
-                  ></Image>
-                )}
-              </TouchableOpacity>
-              <Text style={mergedStyles.headerText}>
-                {displayedDate.format("MMMM") +
-                  " " +
-                  displayedDate.format("YYYY")}
-              </Text>
-              <TouchableOpacity onPress={nextMonth}>
-                {monthNextButton || (
-                  <Image
-                    resizeMode="contain"
-                    style={mergedStyles.monthButtons}
-                    source={chevronR}
-                  />
-                )}
-              </TouchableOpacity>
-            </View>
-            <View style={styles.calendar}>
-              {dayHeaders && (
-                <View style={styles.dayHeaderContainer}>{dayHeaders}</View>
-              )}
-              {weeks}
-            </View>
-            {presetButtons && (
-              <View style={mergedStyles.buttonContainer}>
+  const calendarView = (
+    <View>
+      <View style={mergedStyles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={previousMonth}>
+            {monthPrevButton || (
+              <Image
+                resizeMode="contain"
+                style={mergedStyles.monthButtons}
+                source={chevronL}
+              ></Image>
+            )}
+          </TouchableOpacity>
+          <Text style={mergedStyles.headerText}>
+            {displayedDate.format("MMMM") +
+              " " +
+              displayedDate.format("YYYY")}
+          </Text>
+          <TouchableOpacity onPress={nextMonth}>
+            {monthNextButton || (
+              <Image
+                resizeMode="contain"
+                style={mergedStyles.monthButtons}
+                source={chevronR}
+              />
+            )}
+          </TouchableOpacity>
+        </View>
+        <View style={styles.calendar}>
+          {dayHeaders && (
+            <View style={styles.dayHeaderContainer}>{dayHeaders}</View>
+          )}
+          {weeks}
+        </View>
+        {presetButtons && (
+          <View style={mergedStyles.buttonContainer}>
+            <Button
+              buttonStyle={buttonStyle}
+              buttonTextStyle={buttonTextStyle}
+              onPress={today}
+            >
+              Today
+            </Button>
+            {range && (
+              <>
                 <Button
                   buttonStyle={buttonStyle}
                   buttonTextStyle={buttonTextStyle}
-                  onPress={today}
+                  onPress={thisWeek}
                 >
-                  Today
+                  This Week
                 </Button>
-                {range && (
-                  <>
-                    <Button
-                      buttonStyle={buttonStyle}
-                      buttonTextStyle={buttonTextStyle}
-                      onPress={thisWeek}
-                    >
-                      This Week
-                    </Button>
-                    <Button
-                      buttonStyle={buttonStyle}
-                      buttonTextStyle={buttonTextStyle}
-                      onPress={thisMonth}
-                    >
-                      This Month
-                    </Button>
-                  </>
-                )}
-              </View>
+                <Button
+                  buttonStyle={buttonStyle}
+                  buttonTextStyle={buttonTextStyle}
+                  onPress={thisMonth}
+                >
+                  This Month
+                </Button>
+              </>
             )}
           </View>
-        </View>
+        )}
       </View>
-      {node}
+    </View>
+  )
+
+  const submitButton = (
+    <View style={mergedStyles.buttonContainer}>
+      <Button
+        buttonStyle={buttonStyle}
+        buttonTextStyle={buttonTextStyle}
+        onPress={_onClose}
+      >
+        Submit
+      </Button>
+    </View>
+  )
+
+  return isOpen ? (
+    <>
+      {
+        mode === 'dialog' && (
+          <React.Fragment>
+            <View style={mergedStyles.backdrop}>
+              <TouchableWithoutFeedback
+                style={styles.closeTrigger}
+                onPress={_onClose}
+              >
+                <View style={styles.closeContainer} />
+              </TouchableWithoutFeedback>
+              {calendarView}
+            </View>
+            {node}
+          </React.Fragment>
+        )
+      }
+      {
+        mode === 'relative' && (
+          <View style={mergedStyles.relativeContainer}>
+            {calendarView}
+            {isSubmitButton && submitButton}
+            {open && node}
+          </View>
+        )
+      }
     </>
   ) : (
     <>{node}</>
@@ -430,7 +468,9 @@ DateRangePicker.propTypes = {
   buttonTextStyle: PropTypes.object,
   buttonStyle: PropTypes.object,
   buttonContainerStyle: PropTypes.object,
+  relativeContainerStyle: PropTypes.object,
   presetButtons: PropTypes.bool,
+  mode: PropTypes.oneOf(['dialog', 'relative'])
 };
 
 const styles = StyleSheet.create({
@@ -503,4 +543,17 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
   },
+  relativeContainer: {
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
+    elevation: 3,
+    shadowColor: 'white',
+    shadowOffset: {
+      width: 3,
+      height: 3,
+    },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    borderRadius: 5
+  }
 });
